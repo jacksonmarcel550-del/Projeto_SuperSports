@@ -887,6 +887,7 @@
 
   let cartCount = 0;
   let allProductsLoaded = false;
+  let currentCategory = null;
 
   // Emoji map for category icons
   const catIcons = {
@@ -965,7 +966,7 @@
         const count = cat.count || cat.total || cat.quantidade || '';
         const icon = getIcon(name);
         return `
-          <div class="cat-card">
+          <div class="cat-card" onclick="filterProducts('${name}')">
             <div class="cat-icon">${icon}</div>
             <div class="cat-name">${name}</div>
             ${count ? `<div class="cat-count">${count} produtos</div>` : ''}
@@ -992,7 +993,7 @@
       { name: 'Acessórios', icon: '⚡' },
     ];
     return cats.map(c => `
-      <div class="cat-card">
+      <div class="cat-card" onclick="filterProducts('${c.name}')">
         <div class="cat-icon">${c.icon}</div>
         <div class="cat-name">${c.name}</div>
       </div>`).join('');
@@ -1091,6 +1092,89 @@
         </div>
       </div>`).join('');
   }
+  async function filterProducts(category) {
+  currentCategory = category;
+
+  const grid = document.getElementById('productsGrid');
+
+  grid.innerHTML = `
+    <div class="state-box">
+      <div class="spinner"></div>
+      <p>Carregando ${category}...</p>
+    </div>
+  `;
+
+  try {
+    let data = null;
+
+    const attempts = ['products', 'produtos', 'product', 'items'];
+
+    for (const table of attempts) {
+      const res = await db
+        .from(table)
+        .select('*');
+
+      if (!res.error && res.data) {
+        data = res.data.filter(prod => {
+          const cat =
+            (prod.category ||
+             prod.categoria ||
+             prod.tipo ||
+             '').toLowerCase();
+
+          return cat.includes(category.toLowerCase());
+        });
+
+        break;
+      }
+    }
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = `
+        <div class="state-box">
+          <p>Nenhum produto encontrado em ${category}</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = data.map((p) => {
+      const name  = p.name || p.nome || p.title || p.titulo || 'Produto';
+      const price = p.price || p.preco || p.valor || null;
+      const img   = p.imagem_url || p.image_url || p.imagem || p.image || p.foto || p.thumbnail || null;
+      const cat   = p.category || p.categoria || p.tipo || '';
+
+      return `
+      <div class="product-card">
+        <div class="product-img-wrap">
+          <img
+            src="${img || placeholderImg(name)}"
+            alt="${name}"
+            onerror="this.src='${placeholderImg(name)}'"
+          />
+        </div>
+
+        <div class="product-info">
+          <div class="product-cat">${cat}</div>
+          <div class="product-name">${name}</div>
+
+          <div class="product-footer">
+            <div class="product-price">${formatPrice(price)}</div>
+
+            <button class="add-btn"
+              onclick="addToCart('${name.replace(/'/g, "\\'")}')">
+              Adicionar
+            </button>
+          </div>
+        </div>
+      </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error(error);
+  }
+}
 
   // ── CART ─────────────────────────────────────
   function addToCart(productName) {
