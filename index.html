@@ -1023,7 +1023,7 @@
       grid.innerHTML = data.map((p, i) => {
         const name  = p.name || p.nome || p.title || p.titulo || 'Produto';
         const price = p.price || p.preco || p.valor || null;
-        const img   = p.image_url || p.imagem || p.image || p.foto || p.thumbnail || null;
+        const img   = p.imagem_url || p.image_url || p.imagem || p.image || p.foto || p.thumbnail || null;
         const cat   = p.category || p.categoria || p.tipo || '';
         const badge = i < 2 ? '<span class="product-badge">Destaque</span>' : '';
 
