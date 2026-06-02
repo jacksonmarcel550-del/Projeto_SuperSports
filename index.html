@@ -1092,7 +1092,7 @@
         </div>
       </div>`).join('');
   }
-  async function filterProducts(category) {
+ async function filterProducts(category) {
   currentCategory = category;
 
   const grid = document.getElementById('productsGrid');
@@ -1105,25 +1105,34 @@
   `;
 
   try {
+    // Busca o id da categoria pelo nome
+    const { data: catData } = await db
+      .from('categorias')
+      .select('id')
+      .ilike('nome', category)
+      .limit(1);
+
+    const categoriaId = catData && catData[0] ? catData[0].id : null;
+
     let data = null;
 
-    const attempts = ['products', 'produtos', 'product', 'items'];
-
-    for (const table of attempts) {
+    if (categoriaId) {
       const res = await db
-        .from(table)
-        .select('*');
+        .from('produtos')
+        .select('*')
+        .eq('categoria_id', categoriaId);
+      if (!res.error) data = res.data;
+    }
 
+    if (!data) {
+      const res = await db.from('produtos').select('*');
       if (!res.error && res.data) {
         data = res.data.filter(prod => {
-          const cat =
-            (prod.category ||
-             prod.categoria ||
-             prod.tipo ||
-             '').toLowerCase();
-
+          const cat = (prod.categoria || prod.category || prod.tipo || '').toLowerCase();
           return cat.includes(category.toLowerCase());
         });
+      }
+    }
 
         break;
       }
