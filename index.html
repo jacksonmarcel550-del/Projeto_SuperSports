@@ -1253,10 +1253,7 @@ function openCart() {
 function closeCart() {
   document.getElementById('cartModal').style.display = 'none';
 }
-  function openCart() {
-    showToast(cartCount === 0 ? 'Carrinho vazio' : `${cartCount} item(ns) no carrinho`);
-  }
-
+  
   function showToast(msg) {
     const toast = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
