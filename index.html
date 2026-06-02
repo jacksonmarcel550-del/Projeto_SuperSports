@@ -541,7 +541,26 @@
     }
 
     .promo-dot { width: 5px; height: 5px; background: var(--black); border-radius: 50%; opacity: .4; }
-
+    
+<!-- ── CART MODAL -->
+<div id="cartModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:flex-start;justify-content:flex-end">
+  <div style="background:var(--surface);width:100%;max-width:440px;height:100vh;display:flex;flex-direction:column;border-left:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.5rem;border-bottom:1px solid var(--border)">
+      <h3 style="font-family:var(--font-display);font-size:1.5rem;letter-spacing:1px">CARRINHO</h3>
+      <button onclick="closeCart()" style="background:none;border:none;color:var(--white);font-size:1.5rem;cursor:pointer">✕</button>
+    </div>
+    <div id="cartBody" style="flex:1;overflow-y:auto;padding:1rem 1.5rem"></div>
+    <div style="padding:1.5rem;border-top:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:1rem">
+        <span style="font-family:var(--font-label);font-size:.9rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Total</span>
+        <span id="cartTotal" style="font-family:var(--font-display);font-size:1.5rem;color:var(--lime)">R$ 0,00</span>
+      </div>
+      <button onclick="showToast('Pedido finalizado! 🎉')" style="width:100%;background:var(--lime);color:var(--black);border:none;border-radius:8px;padding:1rem;font-family:var(--font-label);font-size:1rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer">
+        Finalizar Pedido
+      </button>
+    </div>
+  </div>
+</div>
     /* ── TOAST ─────────────────────────────────── */
     .toast {
       position: fixed;
@@ -1182,12 +1201,58 @@
 }
 
   // ── CART ─────────────────────────────────────
-  function addToCart(productName) {
-    cartCount++;
-    document.getElementById('cartCount').textContent = cartCount;
-    showToast(`${productName} adicionado!`);
-  }
+  let cart = [];
 
+function addToCart(productName, price) {
+  const existing = cart.find(i => i.name === productName);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ name: productName, price: price, qty: 1 });
+  }
+  cartCount = cart.reduce((a, i) => a + i.qty, 0);
+  document.getElementById('cartCount').textContent = cartCount;
+  showToast(`${productName} adicionado!`);
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  cartCount = cart.reduce((a, i) => a + i.qty, 0);
+  document.getElementById('cartCount').textContent = cartCount;
+  renderCart();
+}
+
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  if (cart.length === 0) {
+    body.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">Carrinho vazio</p>';
+    document.getElementById('cartTotal').textContent = 'R$ 0,00';
+    return;
+  }
+  body.innerHTML = cart.map((item, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.8rem 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:.9rem;font-weight:500">${item.name}</div>
+        <div style="font-size:.8rem;color:var(--muted)">${formatPrice(item.price)} x ${item.qty}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span style="font-family:var(--font-display);color:var(--lime);font-size:1.1rem">${formatPrice(item.price * item.qty)}</span>
+        <button onclick="removeFromCart(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem">✕</button>
+      </div>
+    </div>
+  `).join('');
+  const total = cart.reduce((a, i) => a + i.price * i.qty, 0);
+  document.getElementById('cartTotal').textContent = formatPrice(total);
+}
+
+function openCart() {
+  renderCart();
+  document.getElementById('cartModal').style.display = 'flex';
+}
+
+function closeCart() {
+  document.getElementById('cartModal').style.display = 'none';
+}
   function openCart() {
     showToast(cartCount === 0 ? 'Carrinho vazio' : `${cartCount} item(ns) no carrinho`);
   }
