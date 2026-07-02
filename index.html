@@ -1186,7 +1186,7 @@
             <div class="product-price">${formatPrice(price)}</div>
 
             <button class="add-btn"
-              onclick="addToCart('${name.replace(/'/g, "\\'")}')">
+              onclick="addToCart('${name.replace(/'/g, "\\'")}', ${Number(price) || 0})">
               Adicionar
             </button>
           </div>
@@ -1203,12 +1203,12 @@
   // ── CART ─────────────────────────────────────
   let cart = [];
 
-function addToCart(productName, price) {
+function addToCart(productName, price = 0) {
   const existing = cart.find(i => i.name === productName);
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ name: productName, price: price, qty: 1 });
+    cart.push({ name: productName, price: Number(price) || 0, qty: 1 });
   }
   cartCount = cart.reduce((a, i) => a + i.qty, 0);
   document.getElementById('cartCount').textContent = cartCount;
